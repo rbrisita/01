@@ -1,3 +1,5 @@
+<h1>This repo is stable with Linux but considered experimental with other OSes</h1>
+
 <h1 align="center">○</h1>
 
 <p align="center">
