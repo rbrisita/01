@@ -117,6 +117,9 @@ def _run(
     local: bool = False,
     qr: bool = False,
 ):
+    # Client could start on its own or with the server on the same computer
+    client_thread = None
+
     if local:
         tts_service = "piper"
         # llm_service = "llamafile"
@@ -185,13 +188,19 @@ def _run(
             f".clients.{client_type}.device", package="source"
         )
         client_thread = threading.Thread(target=module.main, args=[server_url])
-        client_thread.start()
+        if not server:
+            client_thread.start()
 
     try:
-        if server:
+        if server and client:
+            client_thread.start()
             server_thread.join()
+        elif server:
+            server_thread.join()
+
         if expose:
             tunnel_thread.join()
+
         if client:
             client_thread.join()
     except KeyboardInterrupt:
