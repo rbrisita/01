@@ -351,6 +351,36 @@ async def main(
                     "temperature": temperature,
                 }
             )
+        # server.services.stt.local-whisper.stt
+        elif service == "stt":
+            # Parse stt key value
+            path_parts = service_dict[service].split(os.sep)
+            print('path_parts', path_parts)
+            file_name = path_parts.pop()
+            print('file_name', file_name)
+
+            # Update config
+            config.update({"service_directory": os.path.join(services_directory, service, *path_parts)})
+
+            import_path = f".server.services.{service}.{'.'.join(path_parts)}.{file_name}"
+            # server.services.stt.local-whisper.whisper_rust
+            print('server.py::main import_path', import_path)
+            module = import_module(
+                import_path,
+                package="source",
+            )
+
+            # module_parts = re.findall('[A-Z][^A-Z]*', file_name)
+            module_parts = file_name.split("_")
+            capitalized = []
+            for word in module_parts:
+                capitalized.append(word.capitalize())
+            module_name = "".join(capitalized)
+            print('module_name', module_name)
+            ServiceClass = getattr(module, module_name)
+            service_instance = ServiceClass(config)
+            globals()[service] = getattr(service_instance, service)
+            continue
 
         module = import_module(
             f".server.services.{service}.{service_dict[service]}.{service}",

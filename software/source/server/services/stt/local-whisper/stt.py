@@ -208,6 +208,8 @@ def get_transcription_file(service_directory, wav_file_path: str):
     )
     model_name = os.getenv("WHISPER_MODEL_NAME", "ggml-tiny.en.bin")
 
+    # /home/orangepi/.local/share/01/services/stt/local-whisper/model/ggml-tiny.en.bin
+
     output, _ = run_command(
         [
             os.path.join(whisper_rust_path, "whisper-rust"),
