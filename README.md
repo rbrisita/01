@@ -1,4 +1,9 @@
-<h1>This repo is stable with Linux but considered experimental with other OSes</h1>
+<section>
+    <h1 align="center">This branch is stable with:</h1>
+    <h1>Linux Debian 11</h1>
+    <h1>AARCH64 RKNN RK3588</h1>
+    <h1>Python 3.10</h1>
+</section>
 
 <h1 align="center">○</h1>
 
@@ -116,7 +121,7 @@ The final command will print a server URL. You can enter this into your 01 Light
 poetry run 01 --local
 ```
 
-If you want to run local speech-to-text using Whisper, you must install Rust. Follow the instructions given [here](https://www.rust-lang.org/tools/install).
+If you want to run local speech-to-text using Whisper-Rust, you must install Rust. Follow the instructions given [here](https://www.rust-lang.org/tools/install).
 
 ## Customizations
 

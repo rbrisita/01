@@ -163,7 +163,7 @@ async def listener():
 
                 # stt is a bound method
                 text = stt(audio_file_path)
-                print("> ", text)
+                print(f"> '{text}'")
                 message = {"role": "user", "type": "message", "content": text}
 
             # At this point, we have only text messages
@@ -351,6 +351,30 @@ async def main(
                     "temperature": temperature,
                 }
             )
+        elif service == "stt":
+            # Parse stt key value
+            path_parts = service_dict[service].split(os.sep)
+            file_name = path_parts.pop()
+
+            # Update config
+            config.update({"service_directory": os.path.join(services_directory, service, *path_parts)})
+
+            import_path = f".server.services.{service}.{'.'.join(path_parts)}.{file_name}"
+            module = import_module(
+                import_path,
+                package="source",
+            )
+
+            module_parts = file_name.split("_")
+            capitalized = []
+            for word in module_parts:
+                capitalized.append(word.capitalize())
+            module_name = "".join(capitalized)
+
+            ServiceClass = getattr(module, module_name)
+            service_instance = ServiceClass(config)
+            globals()[service] = getattr(service_instance, service)
+            continue
 
         module = import_module(
             f".server.services.{service}.{service_dict[service]}.{service}",

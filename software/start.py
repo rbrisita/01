@@ -7,6 +7,7 @@ import importlib
 from source.server.tunnel import create_tunnel
 from source.server.server import main
 from source.server.utils.local_mode import select_local_model
+from source.server.utils.local_stt import select_local_stt
 import sounddevice
 
 import signal
@@ -121,7 +122,7 @@ def _run(
     if local:
         tts_service = "piper"
         # llm_service = "llamafile"
-        stt_service = "local-whisper"
+        stt_service = select_local_stt()
         select_local_model()
 
     if not server_url:
