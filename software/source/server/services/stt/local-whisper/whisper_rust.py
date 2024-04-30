@@ -1,21 +1,14 @@
-from abc import ABC, abstractmethod
 from datetime import datetime
 import os
 import platform
 import shutil
 import subprocess
 import tempfile
-
 import ffmpeg
 import urllib.request
+from .stt import Stt
 
-
-# class Stt(ABC):
-class WhisperRust():
-    def __init__(self, config):
-        self.service_directory = config["service_directory"]
-        self._install(self.service_directory)
-
+class WhisperRust(Stt):
     def _install(self, service_directory: str):
         script_dir = os.path.dirname(os.path.realpath(__file__))
         print('WhisperRust::_install script_dir', script_dir)
@@ -141,11 +134,7 @@ class WhisperRust():
         return True
 
 
-    def stt(self, audio_file_path):
-        return self.transcribe(self.service_directory, audio_file_path)
-
-
-    def transcribe(self, service_directory: str, audio_file_path: str) -> str:
+    def _transcribe(self, service_directory: str, audio_file_path: str) -> str:
         wav_file_path = self._convert(audio_file_path)
 
         # No need to keep doing this, could be done after model validation
@@ -184,11 +173,3 @@ class WhisperRust():
             output_path, acodec="pcm_s16le", ac=1, ar="16k", loglevel="panic"
         ).run()
         return output_path
-
-
-    # This could be a class method, also could probably use check_output
-    def _run_command(self, cmd: str) -> str:
-        result = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
-        )
-        return result.stdout, result.stderr
