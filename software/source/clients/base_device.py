@@ -26,7 +26,7 @@ from interpreter import (
 
 # In the future, I guess kernel watching code should be elsewhere? Somewhere server / client agnostic?
 from ..server.utils.kernel import put_kernel_messages_into_queue
-from ..server.utils.get_system_info import get_system_info
+from ..server.utils.system_info import get_system_info
 from ..server.utils.process_utils import kill_process_tree
 
 from ..server.utils.logs import setup_logging
