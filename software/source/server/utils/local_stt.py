@@ -1,27 +1,24 @@
 import os
 import inquirer
 from interpreter import interpreter
-import platform
+
+from source.server.utils.system_info import rknn_compatible
 
 
 def select_local_stt():
-    # START OF LOCAL STT PROVIDER LOGIC
-    interpreter.display_message(
-        "> 01 is compatible with several local stt providers.\n"
-    )
-
     # Define the choices for local STTs
     choices = [
         "Whisper Rust",
     ]
-
-    if platform.python_version().startswith("3.10"):
-        if platform.system() == "Linux" and platform.machine() == "aarch64":
-            if "rk3588" in platform.platform() or "rk3588" in platform.release():
-                choices.append("Whisper RKNN")
+    if rknn_compatible():
+        choices.append("Whisper RKNN")
 
     if len(choices) == 1:
         return os.path.join("local-whisper", "whisper_rust")
+
+    interpreter.display_message(
+        "> 01 is compatible with several local stt providers.\n"
+    )
 
     # Use inquirer to let the user select an option
     questions = [
