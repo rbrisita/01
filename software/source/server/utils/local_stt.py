@@ -1,4 +1,5 @@
 import os
+import platform
 import inquirer
 from interpreter import interpreter
 
@@ -10,7 +11,7 @@ def select_local_stt():
     choices = [
         "Whisper Rust",
     ]
-    if rknn_compatible():
+    if platform.python_version().startswith("3.10") and rknn_compatible():
         choices.append("Whisper RKNN")
 
     if len(choices) == 1:

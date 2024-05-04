@@ -3,6 +3,8 @@ import os
 import platform
 import shutil
 import urllib.request
+
+from source.server.services.utils import get_huggingface_model_hash, get_model_hash
 from .utils import run_command
 
 """
@@ -29,24 +31,8 @@ class Stt(ABC):
 
 
     def _validate(self, model_path: str, model_file: str):
-        # Download details file and get hash
-        details_file = f"https://huggingface.co/ggerganov/whisper.cpp/raw/main/{model_file}"
-        try:
-            with urllib.request.urlopen(details_file) as response:
-                body_bytes = response.read()
-        except:
-            print("Internet connection not detected. Skipping validation.")
-            return True
-
-        """
-        Example output of 'https://huggingface.co/ggerganov/whisper.cpp/raw/main/ggml-tiny.en.bin':
-        version https://git-lfs.github.com/spec/v1
-        oid sha256:921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f
-        size 77704715
-        """
-        lines = body_bytes.splitlines()
-        colon_index = lines[1].find(b':')
-        details_hash = lines[1][colon_index + 1:].decode()
+        details_url = f"https://huggingface.co/ggerganov/whisper.cpp/raw/main/{model_file}"
+        details_hash = get_huggingface_model_hash(details_url)
 
         while not self._valid_model(model_path, model_file, details_hash):
             print(f"Downloading Whisper model '{model_file}'.")
@@ -54,7 +40,7 @@ class Stt(ABC):
                 "WHISPER_MODEL_URL",
                 "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/",
             )
-            os.makedirs(self._model_path, exist_ok=True)
+            os.makedirs(model_path, exist_ok=True)
             urllib.request.urlretrieve(
                 f"{WHISPER_MODEL_URL}{model_file}",
                 os.path.join(model_path, model_file),
@@ -64,60 +50,25 @@ class Stt(ABC):
 
 
     def _valid_model(self, model_path: str, model_file: str, details_hash: str) -> bool:
-        # Try to validate model through cryptographic hash comparison
+        """
+        Try to validate model through cryptographic hash comparison.
+        """
 
         model_file_path = os.path.join(model_path, model_file)
         if not os.path.isfile(model_file_path):
             return False
 
-        # Generate model hash using native commands
-        model_hash = None
-        system = platform.system()
-        if system == 'Darwin':
-            shasum_path = shutil.which('shasum')
-            model_hash = run_command(
-                f"{shasum_path} -a 256 {model_file_path} | cut -d' ' -f1",
-                shell=True
-            )
-        elif system == 'Linux':
-            sha256sum_path = shutil.which('sha256sum')
-            model_hash = run_command(
-                f"{sha256sum_path} {model_file_path} | cut -d' ' -f1",
-                shell=True
-            )
-        elif system == 'Windows':
-            comspec = os.getenv("COMSPEC")
-            if comspec.endswith('cmd.exe'): # Most likely
-                certutil_path = shutil.which('certutil')
-                first_op = f"{certutil_path} -hashfile {model_file_path} sha256"
-                second_op = 'findstr /v "SHA256 CertUtil"' # Prints only lines that do not contain a match
-                model_hash = run_command(
-                    f"{first_op} | {second_op}",
-                    shell=True
-                )
-            else:
-                first_op = f"Get-FileHash -LiteralPath {model_file_path} -Algorithm SHA256"
-                subsequent_ops = "Select-Object Hash | Format-Table -HideTableHeaders | Out-String"
-                model_hash = run_command([
-                        'pwsh',
-                        '-Command',
-                        f"({first_op} | {subsequent_ops}).trim().toLower()"
-                    ]
-                )
-        else:
-            print(f"System '{system}' not supported. Skipping validation.")
-            return True
-
         # Compare
-        if details_hash == model_hash.strip():
+        model_hash = get_model_hash(model_file_path)
+        if details_hash == model_hash:
             print(f"Whisper model '{model_file}' file is valid.")
         else:
-            msg = f'''
+            msg = f"""
 The model '{model_file}' did not validate. Whisper STT may not function correctly.
 The model path is '{model_path}'.
 Manually download and verify the model's hash to get better functionality.
 Continuing.
-            '''
+            """
             print(msg)
 
         return True

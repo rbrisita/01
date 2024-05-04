@@ -16,11 +16,7 @@ from interpreter import interpreter
 from ..utils.accumulator import Accumulator
 from .utils.logs import setup_logging
 from .utils.logs import logger
-<<<<<<< HEAD
 import base64
-import shutil
-=======
->>>>>>> 23b3ab3 (Fixing asyncio queue creation and usage by decoupling app, queues, and uvicorn config.)
 from ..utils.print_markdown import print_markdown
 from .queues import Queues
 
@@ -365,11 +361,10 @@ async def main(
         session_file.write(str(session_id))
 
     for service in service_dict:
+        # This is the folder they can mess around in
         service_directory = os.path.join(
             services_directory, service, service_dict[service]
         )
-
-        # This is the folder they can mess around in
         config = {"service_directory": service_directory}
 
         if service == "llm":

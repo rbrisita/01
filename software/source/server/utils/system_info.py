@@ -2,10 +2,9 @@ import platform
 
 
 def rknn_compatible() -> bool:
-    if platform.python_version().startswith("3.10"):
-        if platform.system() == "Linux" and platform.machine() == "aarch64":
-            if "rk3588" in platform.platform() or "rk3588" in platform.release():
-                return True
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        if "rk3588" in platform.platform() or "rk3588" in platform.release():
+            return True
 
     return False
 

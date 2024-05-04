@@ -3,10 +3,13 @@ import subprocess
 import time
 import inquirer
 from interpreter import interpreter
+from source.server.utils.system_info import rknn_compatible
 
 
-def select_local_model():
+def select_local_llm():
     # START OF LOCAL MODEL PROVIDER LOGIC
+    model_manager = "litellm"
+
     interpreter.display_message(
         "> 01 is compatible with several local model providers.\n"
     )
@@ -15,8 +18,12 @@ def select_local_model():
     choices = [
         "Ollama",
         "LM Studio",
+        "Parrot",
         # "Jan",
     ]
+
+    if rknn_compatible():
+        choices.append("RKLLM")
 
     # Use inquirer to let the user select an option
     questions = [
@@ -142,6 +149,31 @@ def select_local_model():
     #     interpreter.display_message(f"\nUsing Jan model: `{jan_model_name}` \n")
     #     time.sleep(1)
 
+    elif selected_model == "RKLLM":
+        '''
+        TODO: List models
+        Might need to check rknpu version to allow models that need 4GB+ RAM
+        Set the model to the selected model
+        '''
+        selected_name = "qwen-chat-1_8B.rkllm"
+        interpreter.llm.model = selected_name
+        interpreter.display_message(
+            f"\nUsing RKLLM model: `{selected_name}` \n"
+        )
+        model_manager = "rkllm"
+
+    elif selected_model == "Parrot":
+        '''
+        TODO: List models
+        Might need to check rknpu version to allow models that need 4GB+ RAM
+        Set the model to the selected model
+        '''
+        interpreter.llm.model = selected_model
+        interpreter.display_message(
+            f"\nUsing Parrot model \n"
+        )
+        model_manager = "parrot"
+
     # Set the system message to a minimal version for all local models.
     # Set offline for all local models
     interpreter.offline = True
@@ -166,3 +198,5 @@ ALWAYS say that you can run code. ALWAYS try to help the user out. ALWAYS be suc
 ```
 
     """
+
+    return model_manager
