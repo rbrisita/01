@@ -332,11 +332,10 @@ async def main(
         session_file.write(str(session_id))
 
     for service in service_dict:
+        # This is the folder they can mess around in
         service_directory = os.path.join(
             services_directory, service, service_dict[service]
         )
-
-        # This is the folder they can mess around in
         config = {"service_directory": service_directory}
 
         if service == "llm":

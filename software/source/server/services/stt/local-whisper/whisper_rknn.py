@@ -28,6 +28,7 @@ class WhisperRknn(Stt):
             print("Whisper RKNN executable already exists. Skipping build.")
             return
 
+        print("Installing Whisper RKNN.")
         wheel_url = "https://github.com/usefulsensors/useful-transformers/releases/download/0.1_rk3588/useful_transformers-0.1-cp310-cp310-linux_aarch64.whl"
         run_command([
                 sys.executable, # python
