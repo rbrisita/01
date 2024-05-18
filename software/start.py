@@ -1,3 +1,4 @@
+from source.server.utils.local_tts import select_local_tts
 import typer
 import asyncio
 import platform
@@ -123,11 +124,11 @@ def _run(
     mobile: bool = False,
 ):
     if local:
-        tts_service = "piper"
+        tts_service = select_local_tts()
         # llm_service = "llamafile"
         stt_service = "local-whisper"
         select_local_model()
-        
+
     system_type = platform.system()
     if system_type == "Windows":
         server_host = "localhost"
@@ -138,8 +139,8 @@ def _run(
     if not server and not client:
         server = True
         client = True
-        
-    
+
+
 
     def handle_exit(signum, frame):
         os._exit(0)
