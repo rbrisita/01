@@ -126,9 +126,9 @@ def _run(
     mobile: bool = False,
 ):
     if local:
-        tts_service = select_local_tts()
-        llm_service = select_local_llm()
         stt_service = select_local_stt()
+        llm_service = select_local_llm()
+        tts_service = select_local_tts()
 
     system_type = platform.system()
     if system_type == "Windows":

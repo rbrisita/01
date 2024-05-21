@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import urllib.request
 
+import ffmpeg
 from source.server.services.utils import report_hook
 
 
@@ -111,7 +112,10 @@ class Tts:
                 "--voices-dir", "voices",
                 "--voice", "en_US/vctk_low#1", # select speaker id 1
                 "--preload-voice", "en_US/vctk_low",
-                "--interactive"
+                "--length-scale", "1.4", # speed of voice (default 1)
+                "--csv", # allow character separated values to write file
+                "--output-dir", "/tmp",
+                "--interactive",
             ],
             text=True,
             cwd=service_directory,
@@ -123,25 +127,27 @@ class Tts:
 
     def tts(self, text, mobile):
         print(f"tts {text}")
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            output_file = temp_file.name
-            print(f"Mimic3 to {output_file}")
+        _, output_file = tempfile.mkstemp()
 
-            characters_written = self._process.stdin.write(f"{output_file}|{text}\n")
-            self._process.stdin.flush()
+        self._process.stdin.write(f"{output_file}|{text}\n")
+        self._process.stdin.flush()
 
-            """
-            # TODO: hack to format audio correctly for device
-            if mobile:
-                outfile = tempfile.gettempdir() + "/" + "output.wav"
-                ffmpeg.input(temp_file.name).output(
-                    outfile, f="wav", ar="16000", ac="1", loglevel="panic"
-                ).run()
-            else:
-                outfile = tempfile.gettempdir() + "/" + "raw.dat"
-                ffmpeg.input(temp_file.name).output(
-                    outfile, f="s16le", ar="16000", ac="1", loglevel="panic"
-                ).run()
-            """
+        # Wait for file to be written
+        output_file += ".wav"
+        while not os.path.exists(output_file):
+            pass
 
         return output_file
+        #     # TODO: hack to format audio correctly for device
+        #     if mobile:
+        #         outfile = tempfile.gettempdir() + "/" + "output.wav"
+        #         ffmpeg.input(output_file).output(
+        #             outfile, f="wav", ar="16000", ac="1", loglevel="panic"
+        #         ).run()
+        #     else:
+        #         outfile = tempfile.gettempdir() + "/" + "raw.dat"
+        #         ffmpeg.input(output_file).output(
+        #             outfile, f="s16le", ar="16000", ac="1", loglevel="panic"
+        #         ).run()
+
+        # return outfile

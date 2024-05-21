@@ -60,8 +60,10 @@ CAMERA_WARMUP_SECONDS = float(os.getenv("CAMERA_WARMUP_SECONDS", 0))
 # Specify OS
 current_platform = get_system_info()
 
+
 def is_win11():
     return sys.getwindowsversion().build >= 22000
+
 
 def is_win10():
     try:
@@ -83,6 +85,7 @@ class Device:
         self.audiosegments = []
         self.server_url = ""
         self.ctrl_pressed = False
+
 
     def fetch_image_from_camera(self, camera_index=CAMERA_DEVICE_INDEX):
         """Captures an image from the specified camera device and saves it to a temporary file. Adds the image to the captured_images list."""
@@ -118,10 +121,12 @@ class Device:
 
         return image_path
 
+
     def encode_image_to_base64(self, image_path):
         """Encodes an image file to a base64 string."""
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
+
 
     def add_image_to_send_queue(self, image_path):
         """Encodes an image and adds an LMC message to the send queue with the image data."""
@@ -136,11 +141,13 @@ class Device:
         # Delete the image file from the file system after sending it
         os.remove(image_path)
 
+
     def queue_all_captured_images(self):
         """Queues all captured images to be sent."""
         for image_path in self.captured_images:
             self.add_image_to_send_queue(image_path)
         self.captured_images.clear()  # Clear the list after sending
+
 
     async def play_audiosegments(self):
         """Plays them sequentially."""
@@ -155,6 +162,7 @@ class Device:
                 pass
             except:
                 logger.info(traceback.format_exc())
+
 
     def record_audio(self):
         if os.getenv("STT_RUNNER") == "server":
@@ -267,7 +275,6 @@ class Device:
     def on_press(self, key):
         """Detect spacebar press and Ctrl+C combination."""
         self.pressed_keys.add(key)  # Add the pressed key to the set
-        
 
         if keyboard.Key.space in self.pressed_keys:
             self.toggle_recording(True)
@@ -275,11 +282,11 @@ class Device:
             logger.info("Ctrl+C pressed. Exiting...")
             kill_process_tree()
             os._exit(0)
-        
+
         # Windows alternative to the above
         if key == keyboard.Key.ctrl_l:
             self.ctrl_pressed = True
-            
+
         try:
             if key.vk == 67 and self.ctrl_pressed:
                 logger.info("Ctrl+C pressed. Exiting...")
@@ -288,7 +295,6 @@ class Device:
         # For non-character keys
         except:
             pass
-
 
 
     def on_release(self, key):
@@ -369,7 +375,7 @@ class Device:
                         code = message["content"]
                         result = interpreter.computer.run(language, code)
                         send_queue.put(result)
-                        
+
         if is_win10():
             logger.info("Windows 10 detected")
             # Workaround for Windows 10 not latching to the websocket server.
@@ -382,7 +388,7 @@ class Device:
         else:
             while True:
                 try:
-                    async with websockets.connect(WS_URL, ping_timeout=None) as websocket:
+                    async with websockets.connect(WS_URL, ping_timeout=None, ping_interval=None) as websocket:
                         await exec_ws_communication(websocket)
                 except:
                     logger.debug(traceback.format_exc())
@@ -430,6 +436,7 @@ class Device:
                 on_press=self.on_press, on_release=self.on_release
             )
             listener.start()
+
 
     def start(self):
         if os.getenv("TEACH_MODE") != "True":

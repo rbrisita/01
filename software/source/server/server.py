@@ -352,7 +352,7 @@ async def main(
     application_directory = user_data_dir("01")
     services_directory = os.path.join(application_directory, "services")
 
-    service_dict = {"llm": llm_service, "tts": tts_service, "stt": stt_service}
+    service_dict = {"stt": stt_service, "llm": llm_service, "tts": tts_service}
 
     # Create a temp file with the session number
     session_file_path = os.path.join(user_data_dir("01"), "01-session.txt")
@@ -423,7 +423,14 @@ async def main(
     if True:  # in the future, code can run on device. for now, just server.
         asyncio.create_task(put_kernel_messages_into_queue(Queues.from_computer))
 
-    config = Config("source.server.app:app", host=server_host, port=int(server_port), lifespan="on")
+    config = Config(
+        "source.server.app:app",
+        host=server_host,
+        port=int(server_port),
+        lifespan="on",
+        ws_ping_timeout=None,
+        ws_ping_interval=None
+    )
     server = Server(config)
     await server.serve()
 

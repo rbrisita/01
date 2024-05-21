@@ -161,6 +161,7 @@ Continuing.
             self._command_file_path,
             "--model", model_file_path,
             "--quiet",
+            "--num", "2",
             "--top_k", "1",
             "--tokens", "256"
         ]
@@ -170,6 +171,7 @@ Continuing.
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE
         )
+        print(f"RKLLM model '{os.path.basename(model_file_path)}' loaded.")
 
 
     def llm(self, messages, model, stream, max_tokens):
@@ -182,19 +184,33 @@ Continuing.
         process = self._process
         while True:
             if process.poll() is not None:
-                # Todo: Try to load model again?
+                # Reload model
+                self._load_model(self._model_file_path)
                 break
 
-            # Read a line from the subprocess's stdout
-            line = process.stdout.read1().decode("utf-8")
+            # Take a peek at the output but don't remove it
+            line = process.stdout.peek().decode("utf-8")
 
             # Check if the line is empty, indicating that the subprocess has finished
             if not line:
                 continue
-            elif line.endswith(">> ") and characters_written:
+
+            # Ouutput finished?
+            elif line.endswith(">> ") and len(line) == 3 and characters_written:
                 break
-            elif line.endswith(">> "):
+
+            # Waiting for input?
+            elif line.endswith(">> ") and len(line) == 3:
+                process.stdout.read1().decode("utf-8") # remove line from input
                 characters_written = process.stdin.write(b"%b\n" % users_content.encode())
                 process.stdin.flush()
+
+            # Output mixed with input indicator?
+            elif line.endswith(">> ") and len(line) != 3: # there is output before input indicator
+                line = process.stdout.readline().decode("utf-8") # remove line with newline from input
+                yield {"choices": [{"delta": {"content": line}}]}
+
+            # Output
             else:
+                line = process.stdout.read1().decode("utf-8") # remove line from input
                 yield {"choices": [{"delta": {"content": line}}]}
