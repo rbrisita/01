@@ -110,11 +110,12 @@ class Tts:
         self._process = subprocess.Popen([
                 self._command_file_path,
                 "--voices-dir", "voices",
-                "--voice", "en_US/vctk_low#1", # select speaker id 1
+                "--voice", "en_US/vctk_low#1", # select voice and speaker id 1
                 "--preload-voice", "en_US/vctk_low",
                 "--length-scale", "1.4", # speed of voice (default 1)
                 "--csv", # allow character separated values to write file
                 "--output-dir", "/tmp",
+                "--play-program", "/dev/null", # This will play the voice too
                 "--interactive",
             ],
             text=True,
@@ -137,17 +138,22 @@ class Tts:
         while not os.path.exists(output_file):
             pass
 
-        return output_file
-        #     # TODO: hack to format audio correctly for device
-        #     if mobile:
-        #         outfile = tempfile.gettempdir() + "/" + "output.wav"
-        #         ffmpeg.input(output_file).output(
-        #             outfile, f="wav", ar="16000", ac="1", loglevel="panic"
-        #         ).run()
-        #     else:
-        #         outfile = tempfile.gettempdir() + "/" + "raw.dat"
-        #         ffmpeg.input(output_file).output(
-        #             outfile, f="s16le", ar="16000", ac="1", loglevel="panic"
-        #         ).run()
+        # TODO: delete file after converting
+        print(f"output_file {output_file}")
 
-        # return outfile
+        # TODO: hack to format audio correctly for device
+        # Otherwise a first-byte error might occur
+        if mobile:
+            outfile = tempfile.gettempdir() + "/" + "output.wav"
+            ffmpeg.input(output_file).output(
+                outfile, f="wav", ar="16000", ac="1", loglevel="panic"
+            ).run()
+        else:
+            outfile = tempfile.gettempdir() + "/" + "raw.dat"
+            ffmpeg.input(output_file).output(
+                outfile, f="s16le", ar="16000", ac="1", loglevel="panic"
+            ).run()
+
+        print(f"outfile {outfile}")
+
+        return outfile
