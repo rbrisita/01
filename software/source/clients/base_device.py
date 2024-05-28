@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from .device_keyboard import listen_keyboard
 
 load_dotenv()  # take environment variables from .env.
 
@@ -187,6 +188,14 @@ class Device:
         print("Recording started...")
         global RECORDING
 
+        frames = []
+        while RECORDING:
+            frames.append(stream.read(CHUNK, exception_on_overflow=False))
+
+        stream.stop_stream()
+        stream.close()
+        print("Recording stopped.")
+
         # Create a temporary WAV file to store the audio data
         temp_dir = tempfile.gettempdir()
         wav_path = os.path.join(
@@ -196,15 +205,8 @@ class Device:
         wav_file.setnchannels(CHANNELS)
         wav_file.setsampwidth(p.get_sample_size(FORMAT))
         wav_file.setframerate(RATE)
-
-        while RECORDING:
-            data = stream.read(CHUNK, exception_on_overflow=False)
-            wav_file.writeframes(data)
-
+        wav_file.writeframes(b''.join(frames))
         wav_file.close()
-        stream.stop_stream()
-        stream.close()
-        print("Recording stopped.")
 
         duration = wav_file.getnframes() / RATE
         if duration < 0.3:
@@ -273,7 +275,12 @@ class Device:
             RECORDING = False
 
     def on_press(self, key):
+        print(f"Device::on_press '{key}'")
         """Detect spacebar press and Ctrl+C combination."""
+
+        if key == " ":
+            key = keyboard.Key.space
+
         self.pressed_keys.add(key)  # Add the pressed key to the set
 
         if keyboard.Key.space in self.pressed_keys:
@@ -298,7 +305,12 @@ class Device:
 
 
     def on_release(self, key):
+        print(f"Device::on_release '{key}'")
         """Detect spacebar release and 'c' key press for camera, and handle key release."""
+
+        if key == " ":
+            key = keyboard.Key.space
+
         self.pressed_keys.discard(key)  # Remove the released key from the key press tracking set
 
         if key == keyboard.Key.ctrl_l:
@@ -431,11 +443,7 @@ class Device:
                 else:
                     break
         else:
-            # Keyboard listener for spacebar press/release
-            listener = keyboard.Listener(
-                on_press=self.on_press, on_release=self.on_release
-            )
-            listener.start()
+            listen_keyboard(on_press=self.on_press, on_release=self.on_release)
 
 
     def start(self):
